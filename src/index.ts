@@ -1,3 +1,4 @@
+require("dotenv").config();
 import "reflect-metadata";
 //import { createConnection } from "typeorm";
 import express from "express";
@@ -29,6 +30,7 @@ import { createConnection } from "typeorm";
     schema: await buildSchema({
       resolvers: [UserResolver],
     }),
+    context: ({ req, res }) => ({ req, res }),
   });
   apolloServer.applyMiddleware({ app });
   app.listen(4000, () => {
