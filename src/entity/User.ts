@@ -19,4 +19,7 @@ export class User extends BaseEntity {
   @Field(() => Int)
   @Column()
   age: number;
+
+  @Column("int", { default: 0 })
+  tokenVersion: number;
 }

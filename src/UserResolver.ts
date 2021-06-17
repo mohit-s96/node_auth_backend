@@ -6,11 +6,15 @@ import {
   ObjectType,
   Field,
   Ctx,
+  UseMiddleware,
+  Int,
 } from "type-graphql";
 import { compare, hash } from "bcryptjs";
 import { User } from "./entity/User";
 import { MyContext } from "./Context";
 import { createAccessToken, createRefreshToken } from "./auth";
+import { authMW } from "./authMW";
+import { getConnection } from "typeorm";
 
 @ObjectType()
 class LoginResponse {
@@ -24,12 +28,27 @@ class LoginResponse {
 export class UserResolver {
   @Query(() => String)
   hello() {
-    return "hemlo ";
+    return "hemlo";
+  }
+  @Query(() => String)
+  @UseMiddleware(authMW)
+  authRoute(@Ctx() { payload }: MyContext) {
+    return `Your user id is: ${payload?.userId} and email is: ${payload?.email}`;
   }
   @Query(() => [User])
   async getDB() {
     const data = await User.query("SELECT * FROM users");
     return data;
+  }
+  @Mutation(() => Boolean)
+  async removeUser(@Arg("id") id: number) {
+    const user = await User.findOne(id);
+    if (user) {
+      await User.remove(user);
+      return true;
+    } else {
+      return false;
+    }
   }
   @Mutation(() => Boolean)
   async register(
@@ -79,5 +98,12 @@ export class UserResolver {
       accessToken: createAccessToken(user, "15m"),
       error: "",
     };
+  }
+  @Mutation(() => Boolean)
+  async revokeTokens(@Arg("userId", () => Int) userId: number) {
+    await getConnection()
+      .getRepository(User)
+      .increment({ id: userId }, "tokenVersion", 1);
+    return true;
   }
 }

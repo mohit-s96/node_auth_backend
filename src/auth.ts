@@ -16,6 +16,7 @@ export const createRefreshToken = (user: User, tLimit: string) => {
     {
       userId: user.id,
       email: user.email,
+      tokenVersion: user.tokenVersion,
     },
     process.env.REFRESH_TOKEN_SECRET!,
     { expiresIn: tLimit }
